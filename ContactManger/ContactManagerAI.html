@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact Manager with AI Assistant</title>
+  <style>
+    /* ###########################################################
+       # General Styles
+       ########################################################### */
+    body {
+      font-family: Arial, sans-serif;
+      background: #0a0a0a;
+      color: #fff;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #121212;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+
+    h1 {
+      color: #30d5c8;
+      text-align: center;
+    }
+
+    form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    input {
+      flex: 1;
+      padding: 10px;
+      border-radius: 5px;
+      border: none;
+      background: #1c1c1c;
+      color: #fff;
+    }
+
+    button {
+      padding: 10px 20px;
+      background: #30d5c8;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      color: #000;
+      font-weight: bold;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      padding: 10px;
+      background: #1c1c1c;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    li span {
+      flex: 1;
+    }
+
+    li button {
+      background: #ff4d4d;
+      margin-left: 10px;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 12px;
+    }
+
+    /* ###########################################################
+       # AI Chat Assistant Styles
+       ########################################################### */
+    #chat-assistant {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 250px;
+      background: #121212;
+      color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 1000;
+    }
+
+    #chat-header {
+      background: #30d5c8;
+      color: #000;
+      padding: 10px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    #chat-messages {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      max-height: 200px;
+    }
+
+    #chat-messages div {
+      margin-bottom: 8px;
+    }
+
+    #chat-messages .user {
+      text-align: right;
+      color: #30d5c8;
+    }
+
+    #chat-messages .bot {
+      text-align: left;
+      color: #fff;
+    }
+
+    #chat-input {
+      border: none;
+      padding: 8px;
+      width: calc(100% - 50px);
+      border-top: 1px solid #333;
+      background: #121212;
+      color: #fff;
+    }
+
+    #chat-send {
+      width: 50px;
+      border: none;
+      background: #30d5c8;
+      cursor: pointer;
+      font-weight: bold;
+      color: #000;
+    }
+
+    @media(max-width:768px){
+      .container {
+        margin: 20px;
+      }
+
+      #chat-assistant{
+        width: 200px;
+        right: 10px;
+        bottom: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Contact Manager</h1>
+    <form id="contact-form">
+      <input type="text" id="name" placeholder="Name" required />
+      <input type="text" id="phone" placeholder="Phone" required />
+      <button type="submit">Add Contact</button>
+    </form>
+    <ul id="contact-list"></ul>
+  </div>
+
+  <!-- AI Chat Assistant -->
+  <div id="chat-assistant">
+    <div id="chat-header">💬 Assistant</div>
+    <div id="chat-messages"></div>
+    <input type="text" id="chat-input" placeholder="Ask me something..." />
+    <button id="chat-send">Send</button>
+  </div>
+
+  <script>
+    /* ###########################################################
+       # Contact Manager Logic
+       ########################################################### */
+    const contactForm = document.getElementById("contact-form");
+    const contactList = document.getElementById("contact-list");
+    let contacts = [];
+
+    contactForm.addEventListener("submit", e => {
+      e.preventDefault();
+      const name = document.getElementById("name").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      if(name && phone){
+        contacts.push({name, phone});
+        displayContacts();
+        contactForm.reset();
+      }
+    });
+
+    function displayContacts() {
+      contactList.innerHTML = "";
+      contacts.forEach((c,index)=>{
+        const li = document.createElement("li");
+        li.innerHTML = `<span>${c.name} - ${c.phone}</span>
+                        <button onclick="deleteContact(${index})">Delete</button>`;
+        contactList.appendChild(li);
+      });
+    }
+
+    function deleteContact(index){
+      contacts.splice(index,1);
+      displayContacts();
+    }
+
+   
+       # AI Chat Assistant Logic
+       
+    const chatMessages = document.getElementById("chat-messages");
+    const chatInput = document.getElementById("chat-input");
+    const chatSend = document.getElementById("chat-send");
+
+    chatSend.addEventListener("click",()=>{
+      const userMessage = chatInput.value.trim();
+      if(!userMessage) return;
+      addMessage(userMessage,"user");
+      chatInput.value="";
+      handleMessage(userMessage);
+    });
+
+    function addMessage(text,sender){
+      const msgDiv = document.createElement("div");
+      msgDiv.textContent = text;
+      msgDiv.className = sender;
+      chatMessages.appendChild(msgDiv);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function handleMessage(msg){
+      msg = msg.toLowerCase();
+
+      // Add contact via chat
+      if(msg.startsWith("add ")){
