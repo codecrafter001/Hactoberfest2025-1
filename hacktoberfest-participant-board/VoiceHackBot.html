@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hacktoberfest Voice AI Bot</title>
+<style>
+  body { font-family: Arial; background: #0a0a0a; color: #fff; margin:0; padding:0;}
+  h1 { text-align:center; color:#30d5c8; margin-top:20px;}
+  #chat-assistant {
+    position: fixed; bottom: 20px; right: 20px; width: 300px;
+    background: #121212; border-radius:10px; box-shadow:0 5px 15px rgba(0,0,0,0.3);
+    display:flex; flex-direction:column; overflow:hidden; font-family:sans-serif; z-index:1000;
+  }
+  #chat-header { background:#30d5c8; color:#000; padding:10px; text-align:center; font-weight:bold; }
+  #chat-messages { flex:1; padding:10px; overflow-y:auto; max-height:250px; }
+  #chat-messages div { margin-bottom:8px; }
+  #chat-messages .user { text-align:right; color:#30d5c8; }
+  #chat-messages .bot { text-align:left; color:#fff; }
+  #chat-input { border:none; padding:8px; width: calc(100% - 50px); border-top:1px solid #333; background:#121212; color:#fff; }
+  #chat-send, #voice-btn { width:50px; border:none; background:#30d5c8; cursor:pointer; font-weight:bold; color:#000; }
+  #chat-input-container { display:flex; }
+</style>
+</head>
+<body>
+
+<h1>Hacktoberfest Voice AI Bot</h1>
+
+<div id="chat-assistant">
+  <div id="chat-header">💬 HackBot</div>
+  <div id="chat-messages"></div>
+  <div id="chat-input-container">
+    <input type="text" id="chat-input" placeholder="Ask something...">
+    <button id="chat-send">Send</button>
+    <button id="voice-btn">🎤</button>
+  </div>
+</div>
+
+<script>
+  // Chat elements
+  const chatMessages = document.getElementById("chat-messages");
+  const chatInput = document.getElementById("chat-input");
+  const chatSend = document.getElementById("chat-send");
+  const voiceBtn = document.getElementById("voice-btn");
+
+  // Dummy participant data
+  let participants = [
+    { name: "Prasad Singh", prs: 3 },
+    { name: "Ubanand36", prs: 5 },
+    { name: "Rashi", prs: 2 }
+  ];
+
+  // Add message
+  function addMessage(text, sender) {
+    const msgDiv = document.createElement("div");
+    msgDiv.textContent = text;
+    msgDiv.className = sender;
+    chatMessages.appendChild(msgDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  // Bot response logic
+  function handleMessage(msg) {
+    msg = msg.toLowerCase();
+    
+    // Voice reply
+    const synth = window.speechSynthesis;
+
+    function speak(text){
+      const utter = new SpeechSynthesisUtterance(text);
+      synth.speak(utter);
+    }
+
+    if(msg.includes("hello") || msg.includes("hi")){
+      const resp = "Hi! I am HackBot 🤖. Ask me about participants or contributions.";
+      addMessage(resp, "bot");
+      speak(resp);
+    }
+    else if(msg.includes("how many participants")){
+      const resp = `There are currently ${participants.length} participants.`;
+      addMessage(resp,"bot");
+      speak(resp);
+    }
+    else if(msg.includes("my prs") || msg.includes("my contributions")){
+      const user = participants[0]; // example: first participant
+      const resp = `${user.name}, you have ${user.prs} merged PRs so far.`;
+      addMessage(resp,"bot");
+      speak(resp);
+    }
+    else if(msg.includes("list participants")){
+      const names = participants.map(p => p.name).join(", ");
+      const resp = `Participants: ${names}`;
+      addMessage(resp,"bot");
+      speak(resp);
+    }
+    else{
+      const resp = "Sorry, I didn't understand. You can ask: 'How many participants?', 'List participants', or 'My PRs'.";
+      addMessage(resp,"bot");
+      speak(resp);
+    }
+  }
+
+  // Send button click
+  chatSend.addEventListener("click", ()=>{
+    const msg = chatInput.value.trim();
+    if(!msg) return;
+    addMessage(msg,"user");
+    chatInput.value="";
+    handleMessage(msg);
+  });
+
+  // Voice recognition
+  const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+  recognition.lang = 'en-US';
+
+  voiceBtn.addEventListener("click", ()=>{
+    recognition.start();
+  });
+
+  recognition.onresult = function(event){
+    const userMsg = event.results[0][0].transcript;
+    addMessage(userMsg,"user");
+    handleMessage(userMsg);
+  }
+</script>
+
+</body>
+</html>
