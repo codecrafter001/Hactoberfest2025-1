@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sticky Notes with AI Assistant</title>
+<style>
+  body { font-family: Arial; background: #0a0a0a; color: #fff; margin:0; padding:20px;}
+  h1 { text-align:center; color:#30d5c8; }
+  #notes-container { display:flex; flex-wrap:wrap; gap:15px; margin-bottom:50px; }
+  .note { background:#121212; padding:15px; border-radius:10px; width:200px; position:relative; }
+  .note h3 { margin-top:0; color:#30d5c8; font-size:16px; }
+  .note p { font-size:14px; color:#bbb; }
+  .delete-btn { position:absolute; top:5px; right:5px; background:red; color:#fff; border:none; border-radius:5px; cursor:pointer; }
+
+  /* Add Note Form */
+  #add-note { display:flex; flex-direction:column; max-width:300px; margin: 0 auto 30px auto; }
+  #add-note input, #add-note textarea { margin-bottom:10px; padding:8px; border-radius:5px; border:none; background:#1c1c1c; color:#fff; }
+  #add-note button { padding:10px; background:#30d5c8; border:none; color:#000; cursor:pointer; font-weight:bold; }
+
+  /* AI Assistant */
+  #ai-assistant {
+    position: fixed; bottom: 20px; right: 20px; width: 280px;
+    background: #121212; border-radius:10px; padding:15px; box-shadow:0 5px 15px rgba(0,0,0,0.3);
+    font-family: Arial, sans-serif; z-index:1000;
+  }
+  #ai-assistant h3 { margin-top:0; color:#30d5c8; text-align:center; }
+  #ai-assistant input { width: calc(100% - 60px); padding:8px; border-radius:5px; border:none; margin-bottom:10px; background:#1c1c1c; color:#fff; }
+  #ai-assistant button { width:50px; border:none; background:#30d5c8; color:#000; font-weight:bold; cursor:pointer; }
+  #ai-response { margin-top:10px; max-height:150px; overflow-y:auto; font-size:14px; line-height:1.4; }
+</style>
+</head>
+<body>
+
+<h1>Sticky Notes with AI Assistant</h1>
+
+<!-- Add Note Form -->
+<div id="add-note">
+  <input type="text" id="note-title" placeholder="Title">
+  <textarea id="note-content" placeholder="Content"></textarea>
+  <button id="add-btn">Add Note</button>
+</div>
+
+<!-- Notes Container -->
+<div id="notes-container"></div>
+
+<!-- AI Assistant -->
+<div id="ai-assistant">
+  <h3>🧠 Notes Assistant</h3>
+  <input type="text" id="ai-input" placeholder="Ask me something...">
+  <button id="ai-btn">Ask</button>
+  <div id="ai-response"></div>
+</div>
+
+<script>
+  // Sticky Notes logic
+  const notesContainer = document.getElementById("notes-container");
+  const addBtn = document.getElementById("add-btn");
+  const noteTitle = document.getElementById("note-title");
+  const noteContent = document.getElementById("note-content");
+
+  let notes = [];
+
+  function renderNotes(){
+    notesContainer.innerHTML = "";
+    notes.forEach((n, index)=>{
+      const noteDiv = document.createElement("div");
+      noteDiv.className = "note";
+      noteDiv.innerHTML = `
+        <h3>${n.title}</h3>
+        <p>${n.content}</p>
+        <button class="delete-btn">X</button>
+      `;
+      noteDiv.querySelector(".delete-btn").addEventListener("click", ()=>{
+        notes.splice(index,1);
+        renderNotes();
+      });
+      notesContainer.appendChild(noteDiv);
+    });
+  }
+
+  addBtn.addEventListener("click", ()=>{
+    const title = noteTitle.value.trim();
+    const content = noteContent.value.trim();
+    if(title && content){
+      notes.push({title, content});
+      noteTitle.value = "";
+      noteContent.value = "";
+      renderNotes();
+    }
+  });
+
+  // AI Assistant logic
+  const aiInput = document.getElementById("ai-input");
+  const aiBtn = document.getElementById("ai-btn");
+  const aiResponse = document.getElementById("ai-response");
+
+  aiBtn.addEventListener("click", () => {
+    const query = aiInput.value.toLowerCase().trim();
+    aiInput.value = "";
+    handleAIQuery(query);
+  });
+
+  function handleAIQuery(query) {
+    let response = "";
+
+    // Summarize notes
+    if(query.includes("summarize")) {
+      if(notes.length === 0) response = "No notes to summarize.";
+      else response = notes.map(n => `- ${n.title}: ${n.content}`).join("\n");
+    }
+    // Search notes by keyword
+    else if(query.includes("search")) {
+      const keyword = query.replace("search", "").trim();
+      const results = notes.filter(n => n.title.toLowerCase().includes(keyword) || n.content.toLowerCase().includes(keyword));
+      response = results.length > 0 ? results.map(n => `- ${n.title}: ${n.content}`).join("\n") : "No notes found with that keyword.";
+    }
+    // Suggest organizing ideas
+    else if(query.includes("suggest") || query.includes("organize")) {
+      response = "💡 Suggestion: Group notes by categories like Work, Personal, Ideas, and use color codes for quick access.";
+    }
+    // Default help
+    else {
+      response = "🤖 You can ask me to:\n- Summarize notes\n- Search [keyword]\n- Suggest organizing ideas";
+    }
+
+    aiResponse.textContent = response;
+  }
+</script>
+
+</body>
+</html>
